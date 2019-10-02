@@ -1,0 +1,17 @@
+body {
+    text-align: center;
+    background-color:rgb(156, 213, 247);
+}
+  
+div {
+    margin-top: 0px;
+}
+  
+.image-section {
+    display: flex;
+    justify-content: center;
+}
+
+label {
+    display: block;
+}
