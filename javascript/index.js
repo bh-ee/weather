@@ -42,5 +42,4 @@ for(var i = 0; i < cityArray.length; i++){
 
 window.onload  =  flag => {
     flag = 1;
-    console.log(flag);
 }
