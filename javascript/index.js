@@ -22,20 +22,46 @@ var pos;
 document.getElementById("date").innerHTML = new Date().toDateString();
 
 printSelectArray(cityArray);
-weatherWithCoords();
+getWeatherWithCoords();
+setLocalStorage("time", "0");
 
-function weatherWithName(cityName) {
+function getWeatherWithName(cityName) {
     //Get weather data and display
+    var seconds = new Date().getTime() / 1000;
+    console.log(seconds);
+    console.log(getTime(cityName));
     if (cityName) {
-        fetchWeatherWithName(cityName,displayWeather);
+        if(timeDiffGreater(seconds,getTime(cityName), 1)) {
+            fetchWeatherWithName(cityName,displayWeather);
+            var time = new Date().getTime() / 1000;
+            setLocalStorage(cityName, time);
+            console.log("hello1");
+        }else{
+            document.getElementById("display").innerHTML = getLocalStorage("display" + cityName);
+            document.getElementById("icon").src = getLocalStorage("icon" + cityName);
+            console.log("hello0");
+        }
     }
 }
 
-function weatherWithCoords() {
+function getCurrentTime(){
+    var seconds = new Date().getTime() / 1000;
+    return seconds;
+}
+
+function getTime(cityName){
+    if(getLocalStorage("time" + cityName) == undefined) {
+        return 0;
+    }else {
+        return parseInt(getLocalStorage("time" + cityName));
+    }
+}
+
+function getWeatherWithCoords() {
     //Display weather based on user's coordinates
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function showPosition(position) {
-            fetchWeatherWithCoords(position.coords.latitude, position.coords.longitude,displayWeather) ;
+            fetchWeatherWithCoords(position.coords.latitude, position.coords.longitude, displayWeather) ;
         });
     }
 }
@@ -43,17 +69,21 @@ function weatherWithCoords() {
 function displayWeather(data) {
     t1.innerHTML = "Latitude: " + data.city.coord.lat.toFixed(2) + 
     "<br>Longitude: " + data.city.coord.lon.toFixed(2);
+    var cityName = data.city.name;
+    setLocalStorage("time" + cityName, getCurrentTime());
     data = data.list[0];
     document.getElementById("display").innerHTML = data.weather[0].description + " " + kelvintoCelcius(data.main["temp"]) + "°C";
+    setLocalStorage("display" + cityName, data.weather[0].description + " " + kelvintoCelcius(data.main["temp"]) + "°C");
     document.getElementById("icon").src = "https://openweathermap.org/img/wn/" + data.weather[0].icon + "@2x.png";
+    setLocalStorage("icon" + cityName, "https://openweathermap.org/img/wn/" + data.weather[0].icon + "@2x.png");
 }
 
 function fetchWeatherWithName(cityName,callback) {
     //Get weather data from API with city name.
     fetch("https://api.openweathermap.org/data/2.5/forecast?q=" + cityName + ",tr&APPID=" + key)
-            .then(function (resp) { return resp.json(); }) // Convert data to json
-                .then(function (data) {
-                    callback &&callback(data);
+        .then(function (resp) { return resp.json(); }) // Convert data to json
+            .then(function (data) {
+               callback && callback(data);
             });
 }
 
@@ -71,16 +101,35 @@ function fetchWeatherWithCoords(latitude, longitude, callback) {
 
 }
 
+function timeDiffGreater(time1,time2,target){
+
+    time1 /= 60;
+    time2 /= 60;
+
+    if(Math.abs(time1 -  time2) > target){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+function getLocalStorage(name) {
+    return localStorage.getItem(name);
+}
+
+function setLocalStorage(name, value){
+    localStorage.setItem(name, value);
+} 
+
 function kelvintoCelcius(temprature) {
     return (temprature - 272.15).toFixed(2);
 }
 
 function printSelectArray(cityArray) {
-
     for (var i = 0; i < cityArray.length; i++) {
-    opt = document.createElement("option");
-    opt.textContent = cityArray[i];
-    opt.value = cityArray[i];
-    selectOption.options.add(opt);
+        opt = document.createElement("option");
+        opt.textContent = cityArray[i];
+        opt.value = cityArray[i];
+        selectOption.options.add(opt);
     }
 }
